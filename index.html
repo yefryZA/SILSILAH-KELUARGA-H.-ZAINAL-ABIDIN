@@ -303,8 +303,43 @@ function startDynasty() {
 
     const dataAnak = {
         'ibu1': [
-            { nama: 'YULIANA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'SAHRI ZANNUR', tgl: '01-01-1980', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'GROGOK', status: 'cerai', foto: 'URL_ISTRI'}], anak: ['BERLIANTA YOSANDRI', 'CAHAYA', 'JUAN'] },
-            { nama: 'YEPI OKMARIZA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'DAYAT', status: 'hidup', foto: 'URL_ISTRI'}], anak: ['DAPI', 'ADEK DAPI'] },
+            { 
+                nama: 'YULIANA', 
+                tgl: '01-01-1980', 
+                foto: 'URL_FOTO_YULIANA', 
+                status: 'hidup', 
+        pasangan: [
+            {
+                nama: 'SAHRI ZANNUR', 
+                tgl: '01-01-1980', 
+                status: 'cerai', 
+                foto: 'URL_FOTO_SAHRI' // Ganti dengan link foto asli atau kosongkan ''
+        }, 
+            {
+                nama: 'GROGOK', 
+                tgl: '13-12-1986', // Kosongkan saja kalau belum tahu tanggalnya, script Cimi sudah handle biar tetap rapi
+                status: 'cerai', 
+                foto: 'URL_FOTO_GROGOK' 
+        }
+    ], 
+    anak: ['BERLIANTA YOSANDRI', 'CAHAYA', 'JUAN'] },
+            
+            { 
+                nama: 'YEPI OKMARIZA', 
+                tgl: '01-01-1980', 
+                foto: 'URL_FOTO', 
+                status: 'hidup', 
+            pasangan: [
+                {
+                    nama: 'DAYAT', 
+                    status: 'hidup', 
+                    status: 'harmonis'
+                    foto: 'URL_Dayat'
+                }
+            ], 
+                
+                anak: ['DAPI', 'ADEK DAPI'] },
+            
             { nama: 'HABI', tgl: '12-12-1990', foto: 'URL_HABI', status: 'hidup', pasangan: [{nama: 'ROSITA (Almh)', status: 'almarhum', foto: 'URL_ALMH'}, {nama: 'ULUM GITA LESTARI', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['FARAND AZMI ZACHARY', 'FAHIRA PUTRI FIRMANZA', 'FACHREEZA MARJANU FIRMANZA'] },
             { nama: 'HAFIL JUNIANSYAH', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'ISTRI PERTAMA', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'ISTRI KEDUA', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['Cucu 1', 'Cucu 2'] },
             { nama: 'AGUS KURNIAWAN', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] },
@@ -415,13 +450,34 @@ function startDynasty() {
 
         if (pasangan && pasangan.length > 0) {
             html += `<p style="font-size: 13px; color: var(--gold); font-weight: bold; margin-bottom:10px;">PASANGAN:</p>
-                     <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap:wrap;">`;
+                     <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap:wrap;">`;
+            
             pasangan.forEach(p => {
-                const sAlm = p.status === 'almarhum' ? 'filter: grayscale(100%); border-color: #888;' : '';
+                const isAlm = p.status === 'almarhum';
+                const sAlm = isAlm ? 'filter: grayscale(100%); border-color: #888;' : '';
+                
+                // --- LOGIKA STATUS ---
+                let statusLabel = '';
+                if (p.status === 'cerai') {
+                    statusLabel = '<span style="color: #FFB347; font-size: 8px;">(Cerai 💔)</span>';
+                } else if (p.status === 'hidup' || p.status === 'harmonis') {
+                    statusLabel = '<span style="color: #77DD77; font-size: 8px;">(Harmonis 💕)</span>';
+                } else if (isAlm) {
+                    statusLabel = '<span style="color: #bbb; font-size: 8px;">(Almarhum 🕯️)</span>';
+                }
+
                 html += `
-                    <div style="text-align: center; width: 70px;">
+                    <div style="text-align: center; width: 90px; margin-bottom: 10px;">
                         <div class="circle-frame" style="width:55px; height:55px; background-image: url('${p.foto}'); ${sAlm}"></div>
-                        <p style="font-size: 9px; margin-top: 5px; color:white;">${p.nama} ${p.status === 'almarhum' ? '🕯️' : ''}</p>
+                        <p style="font-size: 10px; margin-top: 5px; color:white; font-weight:bold; margin-bottom: 2px;">
+                            ${p.nama}
+                        </p>
+                        <div style="line-height: 1;">
+                            ${statusLabel}<br>
+                            <span style="font-size: 8px; color: var(--cream); opacity: 0.8;">
+                                ${p.tgl ? p.tgl : ''}
+                            </span>
+                        </div>
                     </div>`;
             });
             html += `</div>`;
