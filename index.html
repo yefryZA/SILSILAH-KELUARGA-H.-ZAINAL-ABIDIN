@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silsilah H. Zainal Abidin</title>
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --dark: #050A1A;
+            --cream: #FDFDD0;
+            --alm-border: #888;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle, #102A43 0%, #050A1A 100%);
+            color: white;
+            margin: 0;
+            text-align: center;
+            overflow-x: hidden;
+            padding-bottom: 80px; /* Jarak buat tombol back */
+        }
+
+        /* 🏛️ KHUSUS OVERLAY WELCOME */
+#welcome-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d); 
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: 1s ease-out;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.welcome-title {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    color: white;
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.8);
+    margin-bottom: 10px;
+    letter-spacing: 3px;
+}
+
+.welcome-sub {
+    font-size: 45px;
+    color: #D4AF37; /* Warna Gold */
+    font-family: 'Cinzel', serif;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 10px black;
+}
+
+.btn-enter {
+    padding: 15px 40px;
+    font-size: 18px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid #D4AF37;
+    color: #D4AF37;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    box-shadow: 0 0 15px #D4AF37;
+}
+
+.btn-enter:hover {
+    background: #D4AF37;
+    color: black;
+    transform: scale(1.1);
+}
+
+/* Biar konten utama nggak kelihatan dulu */
+#main-app {
+    opacity: 0;
+    transition: 2s;
+}
+
+        /* 🏛️ HEADER MEWAH */
+        .header-box {
+            padding: 30px 10px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 2px solid var(--gold);
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; font-size: 20px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;}
+        h2 { margin: 5px 0 0; font-size: 14px; color: var(--cream); opacity: 0.8; }
+
+        /* 🌳 STRUKTUR POHON */
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 20px;
+            min-height: 60vh;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        /* ✨ GAYA UNTUK PASANGAN (Sandingan) */
+        .couple-container {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Jarak antar Bapak & Ibu */
+            margin-bottom: 10px;
+        }
+
+        /* 👤 STYLE LINGKARAN FOTO */
+        .node {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 100px;
+        }
+
+        .node:hover { transform: scale(1.08); }
+
+        .circle-frame {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            margin: 0 auto;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            position: relative;
+        }
+
+        /* Efek Grayscale buat Almarhum */
+        .node.almarhum .circle-frame {
+            border-color: var(--alm-border);
+            filter: grayscale(100%);
+        }
+
+        /* Icon Lilin buat Almarhum di Foto Utama */
+        .node.almarhum .circle-frame::after {
+            content: "🕯️";
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            font-size: 14px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        .info {
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .nama { font-weight: bold; color: var(--gold); display: block; }
+        .tgl-lahir { font-size: 10px; color: var(--cream); opacity: 0.9; }
+
+        /* ➕ POP-UP DETAIL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 400px;
+            background: #0A192F; border: 2px solid var(--gold);
+            border-radius: 15px; padding: 25px; z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        /* 🔙 TOMBOL BACK NAVIGASI ALALA JARVIS */
+        #btn-back {
+            display: none; /* Muncul hanya saat di folder Ibu */
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: none;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        #btn-back:hover {
+            background: var(--gold);
+            color: black;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+        }
+
+    </style>
+</head>
+<body>
+<audio id="bgMusic" loop>
+    <source src="URL_LAGU_HABI.mp3" type="audio/mpeg">
+</audio>
+
+<div id="welcome-overlay">
+    <div class="welcome-title">WELCOME TO</div>
+    <div class="welcome-sub">DINASTI<br>H. ZAINAL ABIDIN</div>
+    <button class="btn-enter" onclick="startDynasty()">MASUK DINASTI 🏛️</button>
+</div>
+
+<div id="main-app">
+    </div>
+
+<div class="header-box">
+    <h1>SILSILAH KELUARGA H. ZAINAL ABIDIN</h1>
+    <h2>KARYA SETIA BANGSA</h2>
+</div>
+
+<div class="tree-container" id="tree-content">
+    <div class="row" id="row-bapak">
+        <div class="node" id="main-bapak" onclick="showMainBapak()">
+            <div class="circle-frame" style="background-image: url('URL_FOTO_BAPAK');"></div>
+            <div class="info">
+                <span class="nama">H. Zainal Abidin</span>
+                <span class="tgl-lahir">Lahir: 01 Jan 1950</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="row-ibu-utama">
+        <div class="node" onclick="openIbu('ibu1')">
+            <div class="circle-frame" style="background-image: url('URL_FOTO_IBU1');"></div>
+            <div class="info">
+                <span class="nama">Ibu YUHANA</span>
+                <span class="tgl-lahir">Lahir: 10 Feb 1955</span>
+            </div>
+        </div>
+        <div class="node" onclick="openIbu('ibu2')">
+            <div class="circle-frame" style="background-image: url('URL_FOTO_IBU2');"></div>
+            <div class="info">
+                <span class="nama">Ibu ERNAWATI</span>
+                <span class="tgl-lahir">Lahir: 15 Mar 1960</span>
+            </div>
+        </div>
+        <div class="node" onclick="openIbu('ibu3')">
+            <div class="circle-frame" style="background-image: url('URL_FOTO_IBU3');"></div>
+            <div class="info">
+                <span class="nama">Ibu MUSLIHATIN</span>
+                <span class="tgl-lahir">Lahir: 20 Apr 1965</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="row-anak" style="display:none; gap:15px;">
+        </div>
+</div>
+
+<button id="btn-back" onclick="backToMain()">⬅ KEMBALI KE BAPAK</button>
+
+<div id="modalDetail" class="modal">
+    <div id="modalContent"></div>
+    <button onclick="closeModal()" style="margin-top:20px; background:none; border: 1px solid var(--gold); color:var(--gold); padding:6px 15px; border-radius:20px; cursor:pointer;">Tutup</button>
+</div>
+
+<script>
+function startDynasty() {
+    const overlay = document.getElementById('welcome-overlay');
+    const mainApp = document.getElementById('main-app');
+    const music = document.getElementById('bgMusic');
+
+    // 1. Fullscreen (Opsional, kalau ganggu miring bisa dihapus)
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) { elem.requestFullscreen(); }
+    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+
+    // 2. Putar Musik
+    if(music) music.play();
+
+    // 3. Animasi Transisi (Gerbang ilang, Konten muncul)
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        mainApp.style.opacity = '1';
+        document.body.style.overflow = 'auto'; // Aktifkan scroll
+    }, 1000);
+}
+
+    // 📂 DATABASE KELUARGA (Cimi sudah rapikan & perbaiki)
+    const dataAnak = {
+        'ibu1': [
+            { nama: 'YULIANA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'SAHRI ZANNUR', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'GROGOK', status: 'cerai', foto: 'URL_ISTRI'}], anak: ['BERLIANTA YOSANDRI', 'CAHAYA', 'JUAN'] },
+            { nama: 'YEPI OKMARIZA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'DAYAT', status: 'hidup', foto: 'URL_ISTRI'}], anak: ['DAPI', 'ADEK DAPI'] },
+            { nama: 'HABI', tgl: '12-12-1990', foto: 'URL_HABI', status: 'hidup', pasangan: [{nama: 'ROSITA (Almh)', status: 'almarhum', foto: 'URL_ALMH'}, {nama: 'ULUM GITA LESTARI', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['FARAND AZMI ZACHARY', 'FAHIRA PUTRI FIRMANZA', 'FACHREEZA MARJANU FIRMANZA'] },
+            { nama: 'HAFIL JUNIANSYAH', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'ISTRI PERTAMA', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'ISTRI KEDUA', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['Cucu 1', 'Cucu 2'] },
+            { nama: 'AGUS KURNIAWAN', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] },
+            { nama: 'RIZKI MARIO AKBAR', tgl: '05-05-1990', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] }
+        ],
+        // Bisa diisi nanti buat ibu 2 & 3
+        'ibu2': [{ nama: 'YULIANA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'SAHRI ZANNUR', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'GROGOK', status: 'cerai', foto: 'URL_ISTRI'}], anak: ['BERLIANTA YOSANDRI', 'CAHAYA', 'JUAN'] },
+            { nama: 'YEPI OKMARIZA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'DAYAT', status: 'hidup', foto: 'URL_ISTRI'}], anak: ['DAPI', 'ADEK DAPI'] },
+            { nama: 'HABI', tgl: '12-12-1990', foto: 'URL_HABI', status: 'hidup', pasangan: [{nama: 'ROSITA (Almh)', status: 'almarhum', foto: 'URL_ALMH'}, {nama: 'ULUM GITA LESTARI', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['FARAND AZMI ZACHARY', 'FAHIRA PUTRI FIRMANZA', 'FACHREEZA MARJANU FIRMANZA'] },
+            { nama: 'HAFIL JUNIANSYAH', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'ISTRI PERTAMA', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'ISTRI KEDUA', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['Cucu 1', 'Cucu 2'] },
+            { nama: 'AGUS KURNIAWAN', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] },
+            { nama: 'RIZKI MARIO AKBAR', tgl: '05-05-1990', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] }],
+        'ibu3': [{ nama: 'YULIANA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'SAHRI ZANNUR', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'GROGOK', status: 'cerai', foto: 'URL_ISTRI'}], anak: ['BERLIANTA YOSANDRI', 'CAHAYA', 'JUAN'] },
+            { nama: 'YEPI OKMARIZA', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'DAYAT', status: 'hidup', foto: 'URL_ISTRI'}], anak: ['DAPI', 'ADEK DAPI'] },
+            { nama: 'HABI', tgl: '12-12-1990', foto: 'URL_HABI', status: 'hidup', pasangan: [{nama: 'ROSITA (Almh)', status: 'almarhum', foto: 'URL_ALMH'}, {nama: 'ULUM GITA LESTARI', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['FARAND AZMI ZACHARY', 'FAHIRA PUTRI FIRMANZA', 'FACHREEZA MARJANU FIRMANZA'] },
+            { nama: 'HAFIL JUNIANSYAH', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [{nama: 'ISTRI PERTAMA', status: 'cerai', foto: 'URL_ISTRI'}, {nama: 'ISTRI KEDUA', status: 'hidup', foto: 'URL_ISTRI2'}], anak: ['Cucu 1', 'Cucu 2'] },
+            { nama: 'AGUS KURNIAWAN', tgl: '01-01-1980', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] },
+            { nama: 'RIZKI MARIO AKBAR', tgl: '05-05-1990', foto: 'URL_FOTO', status: 'hidup', pasangan: [], anak: [] }]
+    };
+
+    // Data 3 Ibu (Buat nampilin sandingan)
+    const infoIbu = {
+        'ibu1': { nama: 'Ibu YUHANA', tgl: '10 Feb 1955', foto: 'URL_FOTO_IBU1', status: 'hidup' },
+        'ibu2': { nama: 'Ibu ERNAWATI', tgl: '15 Mar 1960', foto: 'URL_FOTO_IBU2', status: 'hidup' },
+        'ibu3': { nama: 'Ibu MUSLIHATIN', tgl: '20 Apr 1965', foto: 'URL_FOTO_IBU3', status: 'hidup' }
+    };
+
+    // --- 🧠 LOGIKA NAVIGASI (Perubahan Besar di Sini) --- //
+
+    // 1. FUNGSI SAKTI: BUKA DAFTAR ANAK + BAPAK/IBU BERSANDING
+    function openIbu(key) {
+        const rowBapak = document.getElementById('row-bapak');
+        const rowIbuUtama = document.getElementById('row-ibu-utama');
+        const rowAnak = document.getElementById('row-anak');
+        const backBtn = document.getElementById('btn-back');
+        const dataIbu = infoIbu[key];
+        const listAnak = dataAnak[key];
+        
+        if(!listAnak || !dataIbu) return;
+
+        // A. Sembunyikan baris Ibu Utama
+        rowIbuUtama.style.display = 'none';
+
+        // B. Ganti isi Baris Bapak jadi "Bapak & Ibu Bersanding"
+        const bapakFoto = 'URL_FOTO_BAPAK'; // URL Foto Bapak
+        const almIbu = dataIbu.status === 'almarhum' ? 'almarhum' : '';
+
+        rowBapak.innerHTML = `
+            <div class="couple-container">
+                <div class="node" onclick="showMainBapak()">
+                    <div class="circle-frame" style="background-image: url('${bapakFoto}');"></div>
+                    <div class="info">
+                        <span class="nama">H. Zainal Abidin</span>
+                    </div>
+                </div>
+                
+                <div style="font-size: 24px; color: var(--gold); margin-top:-20px;">💖</div>
+
+                <div class="node ${almIbu}">
+                    <div class="circle-frame" style="background-image: url('${dataIbu.foto}'); border-color:white;"></div>
+                    <div class="info">
+                        <span class="nama" style="color:white;">${dataIbu.nama}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // C. Tampilkan Baris Anak
+        let htmlAnak = '';
+        listAnak.forEach((anak, index) => {
+            const alm = anak.status === 'almarhum' ? 'almarhum' : '';
+            htmlAnak += `
+                <div class="node ${alm}" onclick="prosesDetail('${key}', ${index})">
+                    <div class="circle-frame" style="background-image: url('${anak.foto}');"></div>
+                    <div class="info">
+                        <span class="nama">${anak.nama}</span>
+                        <span class="tgl-lahir">${anak.tgl}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        rowAnak.innerHTML = htmlAnak;
+        rowAnak.style.display = 'flex'; // Tampilkan baris anak
+        backBtn.style.display = 'block'; // Tampilkan tombol kembali
+    }
+
+    // 2. FUNGSI JEMBATAN KE POP-UP
+    function prosesDetail(ibuKey, index) {
+        const orang = dataAnak[ibuKey][index];
+        showDetailPopup(orang.nama, orang.tgl, orang.foto, orang.status, orang.pasangan, orang.anak);
+    }
+
+    // 3. FUNGSI TAMPILKAN POP-UP MEWAH
+    function showDetailPopup(nama, tgl, foto, status, pasangan = [], anak = []) {
+        const modal = document.getElementById('modalDetail');
+        const content = document.getElementById('modalContent');
+        
+        const styleAlm = status === 'almarhum' ? 'filter: grayscale(100%); border-color: #888;' : '';
+        const iconAlm = status === 'almarhum' ? '🕯️' : '';
+
+        let html = `
+            <div class="circle-frame" style="width:110px; height:110px; background-image: url('${foto}'); ${styleAlm}"></div>
+            <h2 style="color:var(--gold); margin-top:15px; margin-bottom:0; font-size:20px;">${nama} ${iconAlm}</h2>
+            <p style="font-size:11px; color:var(--cream); margin-top:5px;">Lahir: ${tgl}</p>
+            <hr style="border:0; border-top:1px dashed var(--gold); margin: 15px 0;">
+        `;
+
+        if (pasangan && pasangan.length > 0) {
+            html += `<p style="font-size: 13px; color: var(--gold); font-weight: bold; margin-bottom:10px;">PASANGAN:</p>
+                     <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap:wrap;">`;
+            pasangan.forEach(p => {
+                const sAlm = p.status === 'almarhum' ? 'filter: grayscale(100%); border-color: #888;' : '';
+                html += `
+                    <div style="text-align: center; width: 70px;">
+                        <div class="circle-frame" style="width:55px; height:55px; background-image: url('${p.foto}'); ${sAlm}"></div>
+                        <p style="font-size: 9px; margin-top: 5px; color:white;">${p.nama} ${p.status === 'almarhum' ? '🕯️' : ''}</p>
+                    </div>`;
+            });
+            html += `</div>`;
+        }
+
+        if (anak && anak.length > 0) {
+            html += `<p style="font-size: 13px; color: var(--gold); font-weight: bold; margin-bottom:10px;">ANAK-ANAK:</p>
+                     <div style="text-align: left; padding: 0 10px; max-height:130px; overflow-y:auto; background:rgba(255,255,255,0.03); border-radius:10px;">`;
+            anak.forEach((a, idx) => {
+                html += `<div style="font-size: 12px; padding: 7px; border-bottom: 1px solid rgba(212,175,55,0.1); color:white;">
+                            ${idx + 1}. ${a}
+                         </div>`;
+            });
+            html += `</div>`;
+        } else {
+            html += `<p style="font-size: 11px; color: #888; margin-top:10px;"><i>Belum Menikah / Belum Ada Data Anak</i></p>`;
+        }
+
+        content.innerHTML = html;
+        modal.style.display = 'block';
+    }
+
+    // Fungsi Pop-up Spesial buat King Zainal di Layar Utama
+    function showMainBapak() {
+        showDetailPopup('H. Zainal Abidin', '01 Jan 1950', 'URL_FOTO_BAPAK', 'hidup', 
+            [
+                {nama: 'Ibu YUHANA', status: 'hidup', foto: 'URL_FOTO_IBU1'},
+                {nama: 'Ibu ERNAWATI', status: 'hidup', foto: 'URL_FOTO_IBU2'},
+                {nama: 'Ibu MUSLIHATIN', status: 'hidup', foto: 'URL_FOTO_IBU3'}
+            ], 
+            ['Total 22 Anak (Klik Ibu untuk detail)']
+        );
+    }
+
+    function closeModal() {
+        document.getElementById('modalDetail').style.display = 'none';
+    }
+
+    function backToMain() {
+    const rowBapak = document.getElementById('row-bapak');
+    const rowIbuUtama = document.getElementById('row-ibu-utama');
+    const rowAnak = document.getElementById('row-anak');
+    const backBtn = document.getElementById('btn-back');
+
+    // 1. Kembalikan tampilan Bapak ke posisi semula (Sendirian)
+    rowBapak.innerHTML = `
+        <div class="node" id="main-bapak" onclick="showMainBapak()">
+            <div class="circle-frame" style="background-image: url('URL_FOTO_BAPAK');"></div>
+            <div class="info">
+                <span class="nama">H. Zainal Abidin</span>
+                <span class="tgl-lahir">Lahir: 01 Jan 1950</span>
+            </div>
+        </div>
+    `;
+
+    // 2. Tampilkan lagi baris 3 Ibu
+    rowIbuUtama.style.display = 'flex';
+
+    // 3. Sembunyikan daftar anak dan tombol back
+    rowAnak.style.display = 'none';
+    backBtn.style.display = 'none';
+}
+</script>
+
+</body>
+</html>
