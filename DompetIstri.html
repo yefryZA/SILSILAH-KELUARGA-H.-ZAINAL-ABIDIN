@@ -73,8 +73,8 @@
     const isSuami = urlParams.get('role') === 'suami';
     
     let currentData = { saldo: 0, riwayat: [] };
-    const NO_WA_SUAMI = "628xxxxxxxxxx"; // GANTI DENGAN NO WA HABI
-    const NO_WA_ISTRI = "628xxxxxxxxxx"; // GANTI DENGAN NO WA ISTRI
+    const NO_WA_SUAMI = "628164991986"; // GANTI DENGAN NO WA HABI
+    const NO_WA_ISTRI = "6285138770471"; // GANTI DENGAN NO WA ISTRI
 
     if(isSuami) {
         document.getElementById('role-tag').innerText = "MODE SUAMI";
@@ -135,16 +135,23 @@
         }
 
         // Hitung Pengeluaran Bulan Ini
+        // Hitung Pengeluaran Bulan Ini (Versi Anti-Error)
         let totalOut = 0;
+        const now = new Date();
         const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+
         if(currentData.riwayat) {
             currentData.riwayat.forEach(i => {
-                if(i.type === 'minus' && i.date.split('/')[1] === currentMonth) totalOut += i.amt;
+                // Kita cek: apakah tipenya 'minus' DAN di dalam tanggalnya ada angka bulan sekarang
+                // Contoh: tanggal "31/03/2026" mengandung "/03/"
+                if(i.type === 'minus' && i.date.includes('/' + currentMonth + '/')) {
+                    totalOut += i.amt;
+                }
             });
         }
+        
         document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
         document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
-    }
 
     function showRincian() {
         const list = document.getElementById('list-rincian'); list.innerHTML = "";
