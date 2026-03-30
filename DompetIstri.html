@@ -148,11 +148,12 @@
                     totalOut += i.amt;
                 }
             });
-        }
+        
         
         document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
         document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
     }
+        
     function showRincian() {
         const list = document.getElementById('list-rincian'); list.innerHTML = "";
         if(!currentData.riwayat) return;
