@@ -68,13 +68,12 @@
     const firebaseConfig = { databaseURL: "https://home-67115-default-rtdb.asia-southeast1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
     
-    // DETEKSI ROLE DARI URL (?role=suami)
     const urlParams = new URLSearchParams(window.location.search);
     const isSuami = urlParams.get('role') === 'suami';
     
     let currentData = { saldo: 0, riwayat: [] };
-    const NO_WA_SUAMI = "628164991986"; // GANTI DENGAN NO WA HABI
-    const NO_WA_ISTRI = "6285138770471"; // GANTI DENGAN NO WA ISTRI
+    const NO_WA_SUAMI = "628164991986"; 
+    const NO_WA_ISTRI = "6285138770471"; 
 
     if(isSuami) {
         document.getElementById('role-tag').innerText = "MODE SUAMI";
@@ -106,12 +105,10 @@
         newRiwayat.unshift({ dsc, amt, type: isSuami?'plus':'minus', date: new Date().toLocaleDateString('id-ID') });
 
         db.ref('keuangan_keluarga').update({ saldo: newSaldo, riwayat: newRiwayat }).then(() => {
-            // KIRIM WA REAL-TIME JIKA ISTRI BELANJA
             if(!isSuami) {
                 let pesan = `Lapor Komandan! 🫡%0AAku abis belanja: *${dsc}*%0ANominal: *Rp ${amt.toLocaleString('id-ID')}*%0ASisa Saldo: *Rp ${newSaldo.toLocaleString('id-ID')}*`;
                 window.open(`https://wa.me/${NO_WA_SUAMI}?text=${pesan}`, '_blank');
             }
-            
             document.getElementById('amt-display').value = "";
             document.getElementById('desc').value = "";
             Swal.fire('Berhasil!', isSuami?'Saldo Ditambah':'Belanja Dicatat', 'success');
@@ -121,8 +118,6 @@
     function updateUI() {
         const now = new Date();
         const blnNames = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
-        
-        // Update Saldo & Ambang Batas 1 Juta
         const sld = currentData.saldo || 0;
         document.getElementById('display-saldo').innerText = "Rp " + sld.toLocaleString('id-ID');
         
@@ -134,26 +129,19 @@
             document.getElementById('warn-msg').style.display = 'none';
         }
 
-        // Hitung Pengeluaran Bulan Ini
-        // Hitung Pengeluaran Bulan Ini (Versi Anti-Error)
         let totalOut = 0;
-        const now = new Date();
         const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
-
         if(currentData.riwayat) {
             currentData.riwayat.forEach(i => {
-                // Kita cek: apakah tipenya 'minus' DAN di dalam tanggalnya ada angka bulan sekarang
-                // Contoh: tanggal "31/03/2026" mengandung "/03/"
                 if(i.type === 'minus' && i.date.includes('/' + currentMonth + '/')) {
                     totalOut += i.amt;
                 }
             });
-        
-        
+        }
         document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
         document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
     }
-        
+
     function showRincian() {
         const list = document.getElementById('list-rincian'); list.innerHTML = "";
         if(!currentData.riwayat) return;
@@ -184,18 +172,18 @@
         const now = new Date();
         const blnLaluIdx = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
         const blnNames = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
-        const keyBulanLalu = `last_report_${blnLaluIdx}`;
+        const keyBulanLalu = `last_report_${blnLaluIdx}_2026`;
 
-        // Cek apakah sudah pernah kirim laporan bulan lalu
         if(localStorage.getItem(keyBulanLalu)) return;
 
-        // Logika sederhana: Jika tanggal 1-5, tawarkan kirim laporan bulan lalu
-        if(now.getDate() <= 5) {
+        if(now.getDate() <= 31) { // Sementara diset tiap hari biar Habi bisa ngetes
             let totalBlnLalu = 0;
             const blnLaluStr = (blnLaluIdx + 1).toString().padStart(2, '0');
-            currentData.riwayat.forEach(i => {
-                if(i.type === 'minus' && i.date.split('/')[1] === blnLaluStr) totalBlnLalu += i.amt;
-            });
+            if(currentData.riwayat) {
+                currentData.riwayat.forEach(i => {
+                    if(i.type === 'minus' && i.date.includes('/' + blnLaluStr + '/')) totalBlnLalu += i.amt;
+                });
+            }
 
             if(totalBlnLalu > 0) {
                 Swal.fire({
