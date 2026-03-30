@@ -129,20 +129,23 @@
             document.getElementById('warn-msg').style.display = 'none';
         }
 
+        // LOGIKA BARU: ANTI-BINGUNG FORMAT TANGGAL
         let totalOut = 0;
-        const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
-        
+        const bulanSekarangAngka = now.getMonth() + 1; // Maret = 3
+
         if(currentData.riwayat) {
             currentData.riwayat.forEach(i => {
-                // CEK FORMAT TANGGAL: Apakah mengandung /03/ atau -03-
-                const matchMiring = i.date.includes('/' + currentMonth + '/');
-                const matchStrip = i.date.includes('-' + currentMonth + '-');
-                
-                if(i.type === 'minus' && (matchMiring || matchStrip)) {
+                // Pecah tanggal 31/3/2026 berdasarkan tanda "/"
+                let bagianTanggal = i.date.split('/');
+                // Ambil bagian tengah (indeks 1) dan jadikan angka biasa
+                let bulanDiData = parseInt(bagianTanggal[1]);
+
+                if(i.type === 'minus' && bulanDiData === bulanSekarangAngka) {
                     totalOut += i.amt;
                 }
             });
         }
+        
         document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
         document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
     }
