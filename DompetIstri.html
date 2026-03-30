@@ -106,7 +106,7 @@
 
         db.ref('keuangan_keluarga').update({ saldo: newSaldo, riwayat: newRiwayat }).then(() => {
             if(!isSuami) {
-                let pesan = `Lapor Komandan! 🫡%0AAku abis belanja: *${dsc}*%0ANominal: *Rp ${amt.toLocaleString('id-ID')}*%0ASisa Saldo: *Rp ${newSaldo.toLocaleString('id-ID')}*`;
+                let pesan = `sayangku 💕❤️%0AAku abis belanja: *${dsc}*%0ANominal: *Rp ${amt.toLocaleString('id-ID')}*%0ASisa Saldo: *Rp ${newSaldo.toLocaleString('id-ID')}*%Semangat kerjannya ya sayang, eemmuuaacchh😘`;
                 window.open(`https://wa.me/${NO_WA_SUAMI}?text=${pesan}`, '_blank');
             }
             document.getElementById('amt-display').value = "";
@@ -131,9 +131,14 @@
 
         let totalOut = 0;
         const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+        
         if(currentData.riwayat) {
             currentData.riwayat.forEach(i => {
-                if(i.type === 'minus' && i.date.includes('/' + currentMonth + '/')) {
+                // CEK FORMAT TANGGAL: Apakah mengandung /03/ atau -03-
+                const matchMiring = i.date.includes('/' + currentMonth + '/');
+                const matchStrip = i.date.includes('-' + currentMonth + '-');
+                
+                if(i.type === 'minus' && (matchMiring || matchStrip)) {
                     totalOut += i.amt;
                 }
             });
@@ -141,7 +146,6 @@
         document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
         document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
     }
-
     function showRincian() {
         const list = document.getElementById('list-rincian'); list.innerHTML = "";
         if(!currentData.riwayat) return;
