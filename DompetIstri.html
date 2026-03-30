@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DOMPET ISTRI - Cloud</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #FFD700; --red: #FF5252; --green: #76FF03; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #1B5E20 0%, #050A1A 100%); color: white; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .container { width: 92%; max-width: 380px; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--gold); border-radius: 35px; padding: 25px; margin-bottom: 30px; }
+        .header h1 { font-family: 'Orbitron'; font-size: 16px; color: var(--gold); text-align: center; margin-bottom: 20px; letter-spacing: 2px; }
+        .stat-box { background: rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 12px; text-align: center; cursor: pointer; }
+        .label { font-size: 9px; color: var(--gold); text-transform: uppercase; }
+        .val-saldo { font-size: 26px; font-weight: bold; color: var(--green); }
+        .val-out { font-size: 22px; font-weight: bold; color: var(--red); }
+        input { width: 100%; padding: 14px; border-radius: 15px; border: 1px solid var(--gold); background: rgba(255,255,255,0.05); color: white; margin-bottom: 10px; outline: none; }
+        .btn-belanja { width: 100%; padding: 16px; border-radius: 50px; border: none; font-weight: bold; background: linear-gradient(to right, #FF5252, #B71C1C); color: white; cursor: pointer; }
+        .btn { 
+            width: 100%; padding: 16px; border-radius: 50px; border: none; 
+            font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 5px;
+        }
+        .btn-topup { background: linear-gradient(to right, #FFD700, #B8860B); color: black; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
+        .modal-content { background: #0A192F; width: 85%; padding: 20px; border-radius: 25px; border: 2px solid var(--gold); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>MODE ISTRI</h1></div>
+    <div class="stat-box" onclick="showRincian()"><div class="label">SISA SALDO</div><div id="display-saldo" class="val-saldo">Rp 0</div></div>
+    <div class="stat-box" onclick="showRincian()" style="border-color: var(--red);"><div class="label" id="label-bulan">PENGELUARAN</div><div id="display-out" class="val-out">Rp 0</div></div>
+    <input type="text" id="amt-display" placeholder="Nominal Rp" oninput="formatRupiah(this)"><input type="hidden" id="amt-raw">
+    <input type="text" id="desc" placeholder="Keterangan Belanja">
+    <button class="btn-belanja" onclick="kirimData()">CATAT BELANJA</button>
+</div>
+<div id="modalRincian" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="color: var(--gold); text-align: center; font-size: 16px;">RINCIAN BOOMM!</h3>
+        <div style="max-height: 250px; overflow-y: auto;">
+            <table style="width:100%; font-size:11px; border-collapse:collapse;">
+                <tbody id="list-rincian"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-topup" style="margin-top:15px; padding:10px" onclick="document.getElementById('modalRincian').style.display='none'">TUTUP</button>
+    </div>
+</div>
+<script>
+    const firebaseConfig = { databaseURL: "https://home-67115-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+    firebase.initializeApp(firebaseConfig); const db = firebase.database();
+    let currentData = { saldo: 0, pengeluaranBulanIni: 0, riwayat: [] };
+    function formatRupiah(el) { let val = el.value.replace(/\D/g, ""); document.getElementById('amt-raw').value = val; el.value = val.replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+    db.ref('keuangan_keluarga').on('value', (s) => { const d = s.val(); if(d){ currentData=d; updateUI(); } });
+    function kirimData() {
+        const amt = parseInt(document.getElementById('amt-raw').value); const dsc = document.getElementById('desc').value;
+        if(!amt || !dsc) return Swal.fire('Eits!', 'Isi dulu nominalnya!', 'warning');
+        if(amt > currentData.saldo) return Swal.fire('Saldo Kurang!', 'Minta sama Suami ya!', 'error');
+        let newSaldo = currentData.saldo - amt; let newOut = (currentData.pengeluaranBulanIni || 0) + amt;
+        let newRiwayat = currentData.riwayat || []; newRiwayat.unshift({ dsc, amt, type: 'minus', date: new Date().toLocaleDateString('id-ID') });
+        db.ref('keuangan_keluarga').update({ saldo: newSaldo, pengeluaranBulanIni: newOut, riwayat: newRiwayat }).then(() => {
+            document.getElementById('amt-display').value = ""; document.getElementById('desc').value = ""; Swal.fire('Berhasil!', 'Belanja dicatat.', 'success');
+        });
+    }
+    function updateUI() {
+        const bln = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
+        document.getElementById('display-saldo').innerText = "Rp " + (currentData.saldo || 0).toLocaleString('id-ID');
+        document.getElementById('display-out').innerText = "Rp " + (currentData.pengeluaranBulanIni || 0).toLocaleString('id-ID');
+        document.getElementById('label-bulan').innerText = "BELANJA (" + bln[new Date().getMonth()] + ")";
+    }
+    function showRincian() {
+        const list = document.getElementById('list-rincian'); list.innerHTML = "";
+        currentData.riwayat.forEach(i => { list.innerHTML += `<tr><td style="font-size:8px;color:#aaa">${i.date}</td><td style="color:white;padding:0 10px">${i.dsc}</td><td style="color:${i.type==='plus'?'#76FF03':'#FF5252'};font-weight:bold">${i.type==='plus'?'+':'-'}${i.amt.toLocaleString('id-ID')}</td></tr>`; });
+        document.getElementById('modalRincian').style.display='flex';
+    }
+</script>
+</body>
+</html>
