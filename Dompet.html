@@ -59,13 +59,25 @@
         db.ref('keuangan_keluarga').update({ saldo: newSaldo, riwayat: newRiwayat }).then(() => {
             document.getElementById('amt-display').value = ""; document.getElementById('desc').value = ""; Swal.fire('BOOMM!', 'Saldo Terisi.', 'success');
         });
-    }
-    function updateUI() {
+function updateUI() {
+        // 1. Tampilkan Saldo Utama
         document.getElementById('display-saldo').innerText = "Rp " + (currentData.saldo || 0).toLocaleString('id-ID');
-        document.getElementById('display-out').innerText = "Rp " + (currentData.pengeluaranBulanIni || 0).toLocaleString('id-ID');
+
+        // 2. Hitung total pengeluaran dari data riwayat secara otomatis
+        let totalKeluar = 0;
+        if (currentData.riwayat) {
+            currentData.riwayat.forEach(item => {
+                // Kita cuma mau hitung yang tipenya 'minus' (Pengeluaran Istri)
+                if (item.type === 'minus') {
+                    totalKeluar += item.amt;
+                }
+            });
+        }
+
+        // 3. Tampilkan hasil hitungan ke dashboard 'PENGELUARAN ISTRI'
+        document.getElementById('display-out').innerText = "Rp " + totalKeluar.toLocaleString('id-ID');
     }
     
-db.ref('keuangan_keluarga').update({ pengeluaranBulanIni: 0 });
     function showRincian() {
     const list = document.getElementById('list-rincian');
     list.innerHTML = "";
