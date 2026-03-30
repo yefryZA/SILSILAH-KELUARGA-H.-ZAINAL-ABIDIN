@@ -3,78 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DOMPET ISTRI - Cloud</title>
+    <title>DOMPET KELUARGA - Cloud</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #FFD700; --red: #FF5252; --green: #76FF03; }
+        :root { --gold: #FFD700; --red: #FF5252; --green: #76FF03; --blue: #00E5FF; }
         * { box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #1B5E20 0%, #050A1A 100%); color: white; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .container { width: 92%; max-width: 380px; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--gold); border-radius: 35px; padding: 25px; margin-bottom: 30px; }
-        .header h1 { font-family: 'Orbitron'; font-size: 16px; color: var(--gold); text-align: center; margin-bottom: 20px; letter-spacing: 2px; }
-        .stat-box { background: rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 12px; text-align: center; cursor: pointer; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #050A1A 0%, #1B5E20 100%); color: white; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .container { width: 92%; max-width: 380px; background: rgba(0, 0, 0, 0.85); border: 2px solid var(--gold); border-radius: 35px; padding: 25px; position: relative; }
+        .header h1 { font-family: 'Orbitron'; font-size: 14px; color: var(--gold); text-align: center; margin-bottom: 20px; letter-spacing: 2px; }
+        .stat-box { background: rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .stat-box.warning { border-color: var(--red); box-shadow: 0 0 15px rgba(255, 82, 82, 0.5); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         .label { font-size: 9px; color: var(--gold); text-transform: uppercase; }
         .val-saldo { font-size: 26px; font-weight: bold; color: var(--green); }
         .val-out { font-size: 22px; font-weight: bold; color: var(--red); }
         input { width: 100%; padding: 14px; border-radius: 15px; border: 1px solid var(--gold); background: rgba(255,255,255,0.05); color: white; margin-bottom: 10px; outline: none; }
-        .btn-belanja { width: 100%; padding: 16px; border-radius: 50px; border: none; font-weight: bold; background: linear-gradient(to right, #FF5252, #B71C1C); color: white; cursor: pointer; }
-        .btn { 
-            width: 100%; padding: 16px; border-radius: 50px; border: none; 
-            font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 5px;
-        }
-        .btn-topup { background: linear-gradient(to right, #FFD700, #B8860B); color: black; }
+        .btn { width: 100%; padding: 16px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-action { background: linear-gradient(to right, #FFD700, #B8860B); color: black; }
+        .btn-istri { background: linear-gradient(to right, #FF5252, #B71C1C); color: white; }
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
         .modal-content { background: #0A192F; width: 85%; padding: 20px; border-radius: 25px; border: 2px solid var(--gold); }
+        .role-badge { position: absolute; top: -10px; right: 20px; background: var(--gold); color: black; padding: 2px 12px; border-radius: 10px; font-size: 10px; font-weight: bold; font-family: 'Orbitron'; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="header"><h1>MODE ISTRI</h1></div>
-    <div class="stat-box" onclick="showRincian()"><div class="label">SISA SALDO</div><div id="display-saldo" class="val-saldo">Rp 0</div></div>
-    <div class="stat-box" onclick="showRincian()" style="border-color: var(--red);"><div class="label" id="label-bulan">PENGELUARAN</div><div id="display-out" class="val-out">Rp 0</div></div>
-    <input type="text" id="amt-display" placeholder="Nominal Rp" oninput="formatRupiah(this)"><input type="hidden" id="amt-raw">
-    <input type="text" id="desc" placeholder="Keterangan Belanja">
-    <button class="btn-belanja" onclick="kirimData()">CATAT BELANJA</button>
+    <div id="role-tag" class="role-badge">MODE ISTRI</div>
+    <div class="header"><h1 id="main-title">DOMPET KELUARGA</h1></div>
+    
+    <div id="box-saldo" class="stat-box" onclick="showRincian()">
+        <div class="label">SISA SALDO KAS</div>
+        <div id="display-saldo" class="val-saldo">Rp 0</div>
+    </div>
+
+    <div class="stat-box" onclick="showRincian()" style="border-color: var(--blue);">
+        <div class="label" id="label-bulan">PENGELUARAN BULAN INI</div>
+        <div id="display-out" class="val-out" style="color: var(--blue);">Rp 0</div>
+    </div>
+
+    <input type="text" id="amt-display" placeholder="Nominal Rp" oninput="formatRupiah(this)">
+    <input type="hidden" id="amt-raw">
+    <input type="text" id="desc" placeholder="Keterangan...">
+    
+    <button id="btn-main" class="btn btn-istri" onclick="kirimData()">CATAT BELANJA</button>
+    <p id="warn-msg" style="color: var(--red); font-size: 10px; text-align: center; display: none; font-weight: bold; margin-top: 10px;">⚠️ SALDO KRITIS! HUBUNGI SUAMI</p>
 </div>
+
 <div id="modalRincian" class="modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 style="color: var(--gold); text-align: center; font-size: 16px;">RINCIAN BOOMM!</h3>
-        <div style="max-height: 250px; overflow-y: auto;">
-            <table style="width:100%; font-size:11px; border-collapse:collapse;">
+        <h3 style="color: var(--gold); text-align: center; font-size: 14px; font-family: 'Orbitron';">RIWAYAT TRANSAKSI</h3>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table style="width:100%; font-size:11px; border-collapse:collapse; color: white;">
                 <tbody id="list-rincian"></tbody>
             </table>
         </div>
-        <button class="btn btn-topup" style="margin-top:15px; padding:10px" onclick="document.getElementById('modalRincian').style.display='none'">TUTUP</button>
+        <button class="btn btn-action" style="margin-top:15px; padding:10px" onclick="document.getElementById('modalRincian').style.display='none'">TUTUP</button>
     </div>
 </div>
+
 <script>
     const firebaseConfig = { databaseURL: "https://home-67115-default-rtdb.asia-southeast1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
-    let currentData = { saldo: 0, pengeluaranBulanIni: 0, riwayat: [] };
-    function formatRupiah(el) { let val = el.value.replace(/\D/g, ""); document.getElementById('amt-raw').value = val; el.value = val.replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
-    db.ref('keuangan_keluarga').on('value', (s) => { const d = s.val(); if(d){ currentData=d; updateUI(); } });
+    
+    // DETEKSI ROLE DARI URL (?role=suami)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSuami = urlParams.get('role') === 'suami';
+    
+    let currentData = { saldo: 0, riwayat: [] };
+    const NO_WA_SUAMI = "628xxxxxxxxxx"; // GANTI DENGAN NO WA HABI
+    const NO_WA_ISTRI = "628xxxxxxxxxx"; // GANTI DENGAN NO WA ISTRI
+
+    if(isSuami) {
+        document.getElementById('role-tag').innerText = "MODE SUAMI";
+        document.getElementById('btn-main').innerText = "ISI SALDO (TOP UP)";
+        document.getElementById('btn-main').className = "btn btn-action";
+        document.getElementById('amt-display').placeholder = "Tambah Saldo Rp";
+    }
+
+    function formatRupiah(el) { 
+        let val = el.value.replace(/\D/g, ""); 
+        document.getElementById('amt-raw').value = val; 
+        el.value = val.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
+    }
+
+    db.ref('keuangan_keluarga').on('value', (s) => { 
+        const d = s.val(); 
+        if(d) { currentData = d; updateUI(); checkAutoReport(); } 
+    });
+
     function kirimData() {
-        const amt = parseInt(document.getElementById('amt-raw').value); const dsc = document.getElementById('desc').value;
-        if(!amt || !dsc) return Swal.fire('Eits!', 'Isi dulu nominalnya!', 'warning');
-        if(amt > currentData.saldo) return Swal.fire('Saldo Kurang!', 'Minta sama Suami ya!', 'error');
-        let newSaldo = currentData.saldo - amt; let newOut = (currentData.pengeluaranBulanIni || 0) + amt;
-        let newRiwayat = currentData.riwayat || []; newRiwayat.unshift({ dsc, amt, type: 'minus', date: new Date().toLocaleDateString('id-ID') });
-        db.ref('keuangan_keluarga').update({ saldo: newSaldo, pengeluaranBulanIni: newOut, riwayat: newRiwayat }).then(() => {
-            document.getElementById('amt-display').value = ""; document.getElementById('desc').value = ""; Swal.fire('Berhasil!', 'Belanja dicatat.', 'success');
+        const amt = parseInt(document.getElementById('amt-raw').value);
+        const dsc = document.getElementById('desc').value;
+        if(!amt || !dsc) return Swal.fire('Eits!', 'Isi nominal & keterangan!', 'warning');
+
+        let newSaldo = isSuami ? (currentData.saldo + amt) : (currentData.saldo - amt);
+        if(!isSuami && amt > currentData.saldo) return Swal.fire('Saldo Kurang!', 'Hubungi Suami ya!', 'error');
+
+        let newRiwayat = currentData.riwayat || [];
+        newRiwayat.unshift({ dsc, amt, type: isSuami?'plus':'minus', date: new Date().toLocaleDateString('id-ID') });
+
+        db.ref('keuangan_keluarga').update({ saldo: newSaldo, riwayat: newRiwayat }).then(() => {
+            // KIRIM WA REAL-TIME JIKA ISTRI BELANJA
+            if(!isSuami) {
+                let pesan = `Lapor Komandan! 🫡%0AAku abis belanja: *${dsc}*%0ANominal: *Rp ${amt.toLocaleString('id-ID')}*%0ASisa Saldo: *Rp ${newSaldo.toLocaleString('id-ID')}*`;
+                window.open(`https://wa.me/${NO_WA_SUAMI}?text=${pesan}`, '_blank');
+            }
+            
+            document.getElementById('amt-display').value = "";
+            document.getElementById('desc').value = "";
+            Swal.fire('Berhasil!', isSuami?'Saldo Ditambah':'Belanja Dicatat', 'success');
         });
     }
+
     function updateUI() {
-        const bln = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
-        document.getElementById('display-saldo').innerText = "Rp " + (currentData.saldo || 0).toLocaleString('id-ID');
-        document.getElementById('display-out').innerText = "Rp " + (currentData.pengeluaranBulanIni || 0).toLocaleString('id-ID');
-        document.getElementById('label-bulan').innerText = "BELANJA (" + bln[new Date().getMonth()] + ")";
+        const now = new Date();
+        const blnNames = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
+        
+        // Update Saldo & Ambang Batas 1 Juta
+        const sld = currentData.saldo || 0;
+        document.getElementById('display-saldo').innerText = "Rp " + sld.toLocaleString('id-ID');
+        
+        if(sld <= 1000000) {
+            document.getElementById('box-saldo').classList.add('warning');
+            document.getElementById('warn-msg').style.display = 'block';
+        } else {
+            document.getElementById('box-saldo').classList.remove('warning');
+            document.getElementById('warn-msg').style.display = 'none';
+        }
+
+        // Hitung Pengeluaran Bulan Ini
+        let totalOut = 0;
+        const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+        if(currentData.riwayat) {
+            currentData.riwayat.forEach(i => {
+                if(i.type === 'minus' && i.date.split('/')[1] === currentMonth) totalOut += i.amt;
+            });
+        }
+        document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
+        document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
     }
+
     function showRincian() {
         const list = document.getElementById('list-rincian'); list.innerHTML = "";
-        currentData.riwayat.forEach(i => { list.innerHTML += `<tr><td style="font-size:8px;color:#aaa">${i.date}</td><td style="color:white;padding:0 10px">${i.dsc}</td><td style="color:${i.type==='plus'?'#76FF03':'#FF5252'};font-weight:bold">${i.type==='plus'?'+':'-'}${i.amt.toLocaleString('id-ID')}</td></tr>`; });
+        if(!currentData.riwayat) return;
+        currentData.riwayat.forEach((i, idx) => {
+            list.innerHTML += `<tr style="border-bottom:1px solid #333">
+                <td style="font-size:8px;color:#aaa">${i.date}</td>
+                <td style="padding:10px 5px">${i.dsc}</td>
+                <td style="color:${i.type==='plus'?'#76FF03':'#FF5252'};font-weight:bold">${i.type==='plus'?'+':'-'}${i.amt.toLocaleString('id-ID')}</td>
+                ${isSuami ? `<td onclick="hapusItem(${idx})">🗑️</td>` : ''}
+            </tr>`;
+        });
         document.getElementById('modalRincian').style.display='flex';
+    }
+
+    function hapusItem(idx) {
+        Swal.fire({ title: 'Hapus?', text: "Saldo akan kembali!", icon: 'warning', showCancelButton: true }).then(r => {
+            if(r.isConfirmed) {
+                let rLama = [...currentData.riwayat];
+                let item = rLama[idx];
+                let sBaru = currentData.saldo + (item.type === 'plus' ? -item.amt : item.amt);
+                rLama.splice(idx, 1);
+                db.ref('keuangan_keluarga').update({ saldo: sBaru, riwayat: rLama });
+            }
+        });
+    }
+
+    function checkAutoReport() {
+        const now = new Date();
+        const blnLaluIdx = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const blnNames = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
+        const keyBulanLalu = `last_report_${blnLaluIdx}`;
+
+        // Cek apakah sudah pernah kirim laporan bulan lalu
+        if(localStorage.getItem(keyBulanLalu)) return;
+
+        // Logika sederhana: Jika tanggal 1-5, tawarkan kirim laporan bulan lalu
+        if(now.getDate() <= 5) {
+            let totalBlnLalu = 0;
+            const blnLaluStr = (blnLaluIdx + 1).toString().padStart(2, '0');
+            currentData.riwayat.forEach(i => {
+                if(i.type === 'minus' && i.date.split('/')[1] === blnLaluStr) totalBlnLalu += i.amt;
+            });
+
+            if(totalBlnLalu > 0) {
+                Swal.fire({
+                    title: 'Laporan Bulanan!',
+                    text: `Kirim rekap belanja ${blnNames[blnLaluIdx]} ke Istri?`,
+                    icon: 'info',
+                    showCancelButton: true
+                }).then(r => {
+                    if(r.isConfirmed) {
+                        let pesan = `*REKAP BELANJA BULAN ${blnNames[blnLaluIdx]}*%0A--------------------------%0ATotal Pengeluaran: *Rp ${totalBlnLalu.toLocaleString('id-ID')}*%0A%0ATerima kasih sudah mengatur keuangan keluarga dengan baik! ❤️`;
+                        window.open(`https://wa.me/${NO_WA_ISTRI}?text=${pesan}`, '_blank');
+                        localStorage.setItem(keyBulanLalu, "done");
+                    }
+                });
+            }
+        }
     }
 </script>
 </body>
