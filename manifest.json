@@ -1,0 +1,21 @@
+{
+  "name": "Dompet Keluarga",
+  "short_name": "DompetKeluarga",
+  "start_url": "./DompetIstri.html?role=suami",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
