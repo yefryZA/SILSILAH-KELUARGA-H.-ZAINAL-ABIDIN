@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DOMPET KELUARGA - Cloud</title>
@@ -31,7 +33,7 @@
 </head>
 <body>
 <div class="container">
-    <div id="role-tag" class="role-badge">MODE ISTRI</div>
+    <div id="role-tag" class="role-badge">ULUM GITA LESTARI</div>
     <div class="header"><h1 id="main-title">DOMPET KELUARGA</h1></div>
     
     <div id="box-saldo" class="stat-box" onclick="showRincian()">
@@ -49,8 +51,7 @@
     <input type="text" id="desc" placeholder="Keterangan...">
     
     <button id="btn-main" class="btn btn-istri" onclick="kirimData()">CATAT BELANJA</button>
-    <p id="warn-msg" style="color: var(--red); font-size: 10px; text-align: center; display: none; font-weight: bold; margin-top: 10px;">⚠️ SALDO KRITIS! HUBUNGI SUAMI</p>
-</div>
+    </div>
 
 <div id="modalRincian" class="modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -75,16 +76,24 @@
     const NO_WA_SUAMI = "628164991986"; 
     const NO_WA_ISTRI = "6285138770471"; 
 
+    // Amankan pengecekan elemen DOM untuk role
     if(isSuami) {
-        document.getElementById('role-tag').innerText = "MODE SUAMI";
-        document.getElementById('btn-main').innerText = "ISI SALDO (TOP UP)";
-        document.getElementById('btn-main').className = "btn btn-action";
-        document.getElementById('amt-display').placeholder = "Tambah Saldo Rp";
+        const roleTag = document.getElementById('role-tag');
+        const btnMain = document.getElementById('btn-main');
+        const amtDisplay = document.getElementById('amt-display');
+
+        if(roleTag) roleTag.innerText = "YEFRY ZA.";
+        if(btnMain) {
+            btnMain.innerText = "ISI SALDO (TOP UP)";
+            btnMain.className = "btn btn-action";
+        }
+        if(amtDisplay) amtDisplay.placeholder = "Tambah Saldo Rp";
     }
 
     function formatRupiah(el) { 
         let val = el.value.replace(/\D/g, ""); 
-        document.getElementById('amt-raw').value = val; 
+        let rawEl = document.getElementById('amt-raw');
+        if(rawEl) rawEl.value = val; 
         el.value = val.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
     }
 
@@ -94,50 +103,85 @@
     });
 
     function kirimData() {
-        const amt = parseInt(document.getElementById('amt-raw').value);
-        const dsc = document.getElementById('desc').value;
-        if(!amt || !dsc) return Swal.fire('Eits!', 'Isi nominal & keterangan!', 'warning');
+        const rawEl = document.getElementById('amt-raw');
+        const descEl = document.getElementById('desc');
+        
+        const rawVal = rawEl ? rawEl.value.replace(/\D/g, "") : "";
+        const amt = parseInt(rawVal);
+        const dsc = descEl ? descEl.value : "";
 
-        let newSaldo = isSuami ? (currentData.saldo + amt) : (currentData.saldo - amt);
-        if(!isSuami && amt > currentData.saldo) return Swal.fire('Saldo Kurang!', 'Hubungi Suami ya!', 'error');
+        // Validasi ketat input kosong atau bukan angka
+        if(isNaN(amt) || amt <= 0 || !dsc) {
+            return Swal.fire('Eits!', 'Isi nominal angka yang valid & keterangan dengan benar!', 'warning');
+        }
 
-        let newRiwayat = currentData.riwayat || [];
-        newRiwayat.unshift({ dsc, amt, type: isSuami?'plus':'minus', date: new Date().toLocaleDateString('id-ID') });
+        let saldoSekarang = Number(currentData.saldo);
+        if (isNaN(saldoSekarang)) {
+            saldoSekarang = 0;
+        }
 
-        db.ref('keuangan_keluarga').update({ saldo: newSaldo, riwayat: newRiwayat }).then(() => {
+        let newSaldo = isSuami ? (saldoSekarang + amt) : (saldoSekarang - amt);
+        
+        if(!isSuami && amt > saldoSekarang) {
+            return Swal.fire('Saldo Kurang!', 'Hubungi Suami ya!', 'error');
+        }
+
+        let newRiwayat = Array.isArray(currentData.riwayat) ? [...currentData.riwayat] : [];
+        
+        newRiwayat.unshift({ 
+            dsc: dsc, 
+            amt: amt, 
+            type: isSuami ? 'plus' : 'minus', 
+            date: new Date().toLocaleDateString('id-ID') 
+        });
+
+        db.ref('keuangan_keluarga').update({ 
+            saldo: Number(newSaldo), 
+            riwayat: newRiwayat 
+        }).then(() => {
             if(!isSuami) {
                 let pesan = `*Sayangku* 💕❤️%0A%0AAku abis belanja: *${dsc}*%0ANominal: *Rp ${amt.toLocaleString('id-ID')}*%0ASisa Saldo: *Rp ${newSaldo.toLocaleString('id-ID')}*%0A%0A_Semangat kerjanya ya sayang, eemmuuaacchh..._ 😘`;
                 window.open(`https://wa.me/${NO_WA_SUAMI}?text=${pesan}`, '_blank');
             }
-            document.getElementById('amt-display').value = "";
-            document.getElementById('desc').value = "";
-            Swal.fire('Berhasil!', isSuami?'Saldo Ditambah':'Belanja Dicatat', 'success');
+            
+            if(document.getElementById('amt-display')) document.getElementById('amt-display').value = "";
+            if(rawEl) rawEl.value = "";
+            if(descEl) descEl.value = "";
+            
+            Swal.fire('Berhasil!', isSuami ? 'Saldo Berhasil Ditambah!' : 'Belanja Berhasil Dicatat!', 'success');
+        }).catch((error) => {
+            console.error("Gagal update database:", error);
+            Swal.fire('Gagal!', 'Terjadi kesalahan saat menyimpan ke database.', 'error');
         });
     }
-
+    
     function updateUI() {
         const now = new Date();
         const blnNames = ["JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI","JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"];
         const sld = currentData.saldo || 0;
-        document.getElementById('display-saldo').innerText = "Rp " + sld.toLocaleString('id-ID');
         
-        if(sld <= 1000000) {
-            document.getElementById('box-saldo').classList.add('warning');
-            document.getElementById('warn-msg').style.display = 'block';
-        } else {
-            document.getElementById('box-saldo').classList.remove('warning');
-            document.getElementById('warn-msg').style.display = 'none';
+        const displaySaldo = document.getElementById('display-saldo');
+        if(displaySaldo) displaySaldo.innerText = "Rp " + sld.toLocaleString('id-ID');
+        
+        const boxSaldo = document.getElementById('box-saldo');
+        const warnMsg = document.getElementById('warn-msg');
+
+        if(boxSaldo) {
+            if(sld <= 1000000) {
+                boxSaldo.classList.add('warning');
+                if(warnMsg) warnMsg.style.display = 'block';
+            } else {
+                boxSaldo.classList.remove('warning');
+                if(warnMsg) warnMsg.style.display = 'none';
+            }
         }
 
-        // LOGIKA BARU: ANTI-BINGUNG FORMAT TANGGAL
         let totalOut = 0;
-        const bulanSekarangAngka = now.getMonth() + 1; // Maret = 3
+        const bulanSekarangAngka = now.getMonth() + 1;
 
         if(currentData.riwayat) {
             currentData.riwayat.forEach(i => {
-                // Pecah tanggal 31/3/2026 berdasarkan tanda "/"
                 let bagianTanggal = i.date.split('/');
-                // Ambil bagian tengah (indeks 1) dan jadikan angka biasa
                 let bulanDiData = parseInt(bagianTanggal[1]);
 
                 if(i.type === 'minus' && bulanDiData === bulanSekarangAngka) {
@@ -146,11 +190,18 @@
             });
         }
         
-        document.getElementById('display-out').innerText = "Rp " + totalOut.toLocaleString('id-ID');
-        document.getElementById('label-bulan').innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
+        const displayOut = document.getElementById('display-out');
+        const labelBulan = document.getElementById('label-bulan');
+
+        if(displayOut) displayOut.innerText = "Rp " + totalOut.toLocaleString('id-ID');
+        if(labelBulan) labelBulan.innerText = "BELANJA (" + blnNames[now.getMonth()] + ")";
     }
+
     function showRincian() {
-        const list = document.getElementById('list-rincian'); list.innerHTML = "";
+        const list = document.getElementById('list-rincian'); 
+        if(!list) return;
+        list.innerHTML = "";
+        
         if(!currentData.riwayat) return;
         currentData.riwayat.forEach((i, idx) => {
             list.innerHTML += `<tr style="border-bottom:1px solid #333">
@@ -160,17 +211,56 @@
                 ${isSuami ? `<td onclick="hapusItem(${idx})">🗑️</td>` : ''}
             </tr>`;
         });
-        document.getElementById('modalRincian').style.display='flex';
+        
+        const modalRincian = document.getElementById('modalRincian');
+        if(modalRincian) modalRincian.style.display = 'flex';
     }
 
     function hapusItem(idx) {
-        Swal.fire({ title: 'Hapus?', text: "Saldo akan kembali!", icon: 'warning', showCancelButton: true }).then(r => {
-            if(r.isConfirmed) {
+        let item = currentData.riwayat[idx];
+        if(!item) return;
+        
+        let infoSaldo = item.type === 'plus' 
+            ? 'Karena ini pemasukan, saldo akan dikurangi jika dikembalikan.' 
+            : 'Karena ini pengeluaran, saldo akan ditambah jika dikembalikan.';
+
+        Swal.fire({
+            title: 'Hapus Item Ini?',
+            text: infoSaldo,
+            icon: 'warning',
+            input: 'radio',
+            inputOptions: {
+                'kembali': 'Saldo disesuaikan (dikembalikan/dibatalkan)',
+                'tetap': 'Saldo tetap (tidak ada perubahan saldo)'
+            },
+            inputValue: 'kembali',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Kamu harus memilih salah satu opsi saldo!';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let pilihan = result.value; 
                 let rLama = [...currentData.riwayat];
-                let item = rLama[idx];
-                let sBaru = currentData.saldo + (item.type === 'plus' ? -item.amt : item.amt);
+                let sBaru = currentData.saldo;
+
+                if (pilihan === 'kembali') {
+                    sBaru = currentData.saldo + (item.type === 'plus' ? -item.amt : item.amt);
+                }
+
                 rLama.splice(idx, 1);
-                db.ref('keuangan_keluarga').update({ saldo: sBaru, riwayat: rLama });
+
+                db.ref('keuangan_keluarga').update({ 
+                    saldo: sBaru, 
+                    riwayat: rLama 
+                }).then(() => {
+                    Swal.fire('Terhapus!', 'Item berhasil dihapus.', 'success');
+                    showRincian(); // Refresh tampilan modal rincian jika sedang dibuka
+                });
             }
         });
     }
@@ -183,7 +273,7 @@
 
         if(localStorage.getItem(keyBulanLalu)) return;
 
-        if(now.getDate() <= 31) { // Sementara diset tiap hari biar Habi bisa ngetes
+        if(now.getDate() <= 31) { 
             let totalBlnLalu = 0;
             const blnLaluStr = (blnLaluIdx + 1).toString().padStart(2, '0');
             if(currentData.riwayat) {
@@ -200,7 +290,7 @@
                     showCancelButton: true
                 }).then(r => {
                     if(r.isConfirmed) {
-                        let pesan = `*REKAP BELANJA BULAN ${blnNames[blnLaluIdx]}*%0A--------------------------%0ATotal Pengeluaran: *Rp ${totalBlnLalu.toLocaleString('id-ID')}*%0A%0ATerima kasih sudah mengatur keuangan keluarga dengan baik! ❤️`;
+                        let pesan = `*REKAP BULAN ${blnNames[blnLaluIdx]}*%0A--------------------------%0ATotal Pengeluaran: *Rp ${totalBlnLalu.toLocaleString('id-ID')}*%0A%0ATerima kasih sudah mengatur keuangan keluarga dengan baik! ❤️`;
                         window.open(`https://wa.me/${NO_WA_ISTRI}?text=${pesan}`, '_blank');
                         localStorage.setItem(keyBulanLalu, "done");
                     }
